@@ -1,56 +1,80 @@
-import React, { Component } from "react";
-import { Consumer } from "../../context";
-import TextInputGroup from "../layout/textInputGroup";
-import uuid from "uuid";
+import React, { Component } from 'react';
+import { Consumer } from '../../context';
+import TextInputGroup from '../layout/TextInputGroup';
+import axios from 'axios';
 
-class AddContact extends Component {
+class EditContact extends Component {
   state = {
-    name: "",
-    email: "",
-    phone: "",
+    name: '',
+    email: '',
+    phone: '',
     errors: {}
   };
 
-  onChange = e => this.setState({ [e.target.name]: e.target.value });
+  async componentDidMount() {
+    const { id } = this.props.match.params;
+    const res = await axios.get(
+      `https://jsonplaceholder.typicode.com/users/${id}`
+    );
 
-  onSubmit = (dispatch, e) => {
+    const contact = res.data;
+
+    this.setState({
+      name: contact.name,
+      email: contact.email,
+      phone: contact.phone
+    });
+  }
+
+  onSubmit = async (dispatch, e) => {
     e.preventDefault();
 
     const { name, email, phone } = this.state;
 
     // Check For Errors
-    if (name === "") {
-      this.setState({ errors: { name: "Name is Required" } });
-      return;
-    }
-    if (email === "") {
-      this.setState({ errors: { email: "Email is Required" } });
-      return;
-    }
-    if (phone === "") {
-      this.setState({ errors: { phone: "Phone is Required" } });
+    if (name === '') {
+      this.setState({ errors: { name: 'Name is required' } });
       return;
     }
 
-    const newContact = {
-      id: uuid(),
+    if (email === '') {
+      this.setState({ errors: { email: 'Email is required' } });
+      return;
+    }
+
+    if (phone === '') {
+      this.setState({ errors: { phone: 'Phone is required' } });
+      return;
+    }
+
+    const updContact = {
       name,
       email,
       phone
     };
 
-    dispatch({ type: "ADD_CONTACT", payload: newContact });
+    const { id } = this.props.match.params;
+
+    const res = await axios.put(
+      `https://jsonplaceholder.typicode.com/users/${id}`,
+      updContact
+    );
+
+    dispatch({ type: 'UPDATE_CONTACT', payload: res.data });
 
     // Clear State
     this.setState({
-      name: "",
-      email: "",
-      phone: "",
+      name: '',
+      email: '',
+      phone: '',
       errors: {}
     });
 
-    this.props.history.push("/");
+    this.props.history.push('/');
   };
+
+  onChange = e => this.setState({ [e.target.name]: e.target.value });
+
   render() {
     const { name, email, phone, errors } = this.state;
 
@@ -60,7 +84,7 @@ class AddContact extends Component {
           const { dispatch } = value;
           return (
             <div className="card mb-3">
-              <div className="card-header">Add Contact</div>
+              <div className="card-header">Edit Contact</div>
               <div className="card-body">
                 <form onSubmit={this.onSubmit.bind(this, dispatch)}>
                   <TextInputGroup
@@ -90,7 +114,7 @@ class AddContact extends Component {
                   />
                   <input
                     type="submit"
-                    value="Add Contact"
+                    value="Update Contact"
                     className="btn btn-light btn-block"
                   />
                 </form>
@@ -103,4 +127,4 @@ class AddContact extends Component {
   }
 }
 
-export default AddContact;
+export default EditContact;
